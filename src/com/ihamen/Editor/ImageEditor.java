@@ -1,80 +1,102 @@
 package com.ihamen.Editor;
 
-/**
- * Created by stepanenko.sg on 12.10.2017.
- */
-
 import com.ihamen.Shapes.CompoundShape;
+import com.ihamen.Shapes.Shape;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class ImageEditor {
-    private EditorCanvas canvas;
-    private CompoundShape allShapes = new CompoundShape();
+public class ImageEditor extends JFrame{
+    private CompoundShape allShapes;
+    private CanvasPanel canvasPanel;
 
-    public ImageEditor() {
-        canvas = new EditorCanvas();
+    public ImageEditor(String title) {
+        super(title);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        allShapes = new CompoundShape();
+        canvasPanel = new CanvasPanel();
+        canvasPanel.setBackground(Color.WHITE);
+
+        add(canvasPanel);
+        setSize(640,480);
+        setVisible(true);
     }
 
     public void loadShapes(com.ihamen.Shapes.Shape... shapes) {
         allShapes.clear();
         allShapes.add(shapes);
-        canvas.refresh();
     }
 
-    private class EditorCanvas extends Canvas {
-        JFrame frame;
+    class CanvasPanel extends JPanel{
 
+        private int startX;
+        private int startY;
         private static final int PADDING = 10;
 
-        EditorCanvas() {
-            createFrame();
-            refresh();
+        public CanvasPanel() {
+
+            setOpaque(true);
+
             addMouseListener(new MouseAdapter() {
+
+
                 @Override
                 public void mousePressed(MouseEvent e) {
+
                     allShapes.unSelect();
                     allShapes.selectChildAt(e.getX(), e.getY());
-                    e.getComponent().repaint();
+                    startX = e.getX();
+                    startY = e.getY();
+                    repaint();
+
+                }
+
+
+            });
+
+            addMouseMotionListener(new MouseAdapter() {
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    Shape shape = allShapes.getSelectedShape();
+                    int shiftX,shiftY,oldX,oldY,newX,newY,x,y,width,height;
+
+                    if (shape != null) {
+
+                        oldX = shape.getX();
+                        oldY = shape.getY();
+
+                        shiftX = e.getX() - startX;
+                        shiftY = e.getY() - startY;
+
+                        shape.move(shiftX, shiftY);
+
+                        newX = shape.getX();
+                        newY = shape.getY();
+
+                        x = Math.min(oldX,newX)-1;
+                        y = Math.min(oldY,newY)-1;
+
+                        width = shape.getWidth()+Math.abs(shiftX)+2;
+                        height = shape.getHeight()+Math.abs(shiftY)+2;
+
+                        repaint(x,y,width,height);
+
+                        startX = e.getX();
+                        startY = e.getY();
+                    }
                 }
 
             });
+
         }
 
-        void createFrame() {
-            frame = new JFrame();
-            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-            frame.setLocationRelativeTo(null);
-
-            JPanel contentPanel = new JPanel();
-            Border padding = BorderFactory.createEmptyBorder(PADDING, PADDING, PADDING, PADDING);
-            contentPanel.setBorder(padding);
-            frame.setContentPane(contentPanel);
-
-            frame.add(this);
-            frame.setVisible(true);
-            frame.getContentPane().setBackground(Color.LIGHT_GRAY);
-        }
-
-        public int getWidth() {
-            return allShapes.getX() + allShapes.getWidth() + PADDING;
-        }
-
-        public int getHeight() {
-            return allShapes.getY() + allShapes.getHeight() + PADDING;
-        }
-
-        void refresh() {
-            this.setSize(getWidth(), getHeight());
-            frame.pack();
-        }
-
-        public void paint(Graphics graphics) {
-            allShapes.paint(graphics);
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            allShapes.paint(g);
         }
     }
 }

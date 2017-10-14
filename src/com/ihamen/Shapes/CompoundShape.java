@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CompoundShape extends BaseShape {
+    private Shape selectedShape;
     protected List<com.ihamen.Shapes.Shape> children = new ArrayList<>();
 
     public CompoundShape(){
@@ -116,6 +117,7 @@ public class CompoundShape extends BaseShape {
         super.unSelect();
         for (com.ihamen.Shapes.Shape child : children) {
             child.unSelect();
+            selectedShape = null;
         }
     }
 
@@ -123,10 +125,15 @@ public class CompoundShape extends BaseShape {
         for (com.ihamen.Shapes.Shape child : children) {
             if (child.isInsideBounds(x, y)) {
                 child.select();
+                selectedShape = child;
                 return true;
             }
         }
         return false;
+    }
+
+    public Shape getSelectedShape() {
+        return selectedShape;
     }
 
     @Override
